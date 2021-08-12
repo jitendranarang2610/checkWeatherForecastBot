@@ -25,7 +25,7 @@ def makeresponse(req):
     result = req.get("result")
     parameters = result.get("parameters")
     city = parameters.get("geo-city")
-    date = parameters.get("date-time")
+    date = parameters.get("date")
 
     r = requests.get('https://api.openweathermap.org/data/2.5/weather?q='+ city +'&appid=53c1f84150d78c282b57aae211c7691b')
     json_object = r.json()
