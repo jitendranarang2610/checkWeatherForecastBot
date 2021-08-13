@@ -2,32 +2,35 @@ import json
 import os
 import requests
 
-from flask import Flask, app
+from flask import Flask
 from flask import request
 from flask import make_response
 
 # Flask app should start in global layout
 app = Flask (__name__)
 
-@app.route('/webhook',methods=["Post"])
+@app.route('/webhook',methods=['POST'])
 def webhook():
     req = request.get_json(silent=True, force=True)
     print(json.dumps(req, indent=4))
 
-    res = makeresponse(req)
+    res = processRequest(req)
     res = json.dumps(res, indent=4)
     r = make_response(res)
     r.headers['Content-Type'] = 'application/json'
     return r
 
 
-def makeresponse(req):
+def makeResponse(req):
+    if req.get("result").get("action") != "fetchWeatherForecast":
+        return {}
     result = req.get("result")
     parameters = result.get("parameters")
     city = parameters.get("geo-city")
     date = parameters.get("date")
-
-    r = requests.get('https://api.openweathermap.org/data/2.5/weather?q='+ city +'&appid=53c1f84150d78c282b57aae211c7691b')
+    if city is None:
+        return None 
+    r = requests.get('https://api.openweathermap.org/data/2.5/forecast?q='+ city +'&appid=53c1f84150d78c282b57aae211c7691b')
     json_object = r.json()
     weather = json_object['list']
     for i in len(weather):
@@ -41,7 +44,7 @@ def makeresponse(req):
     return {
         "speech" : speech,
         "displayText" : speech,
-        "source": "dialogflow-weather-webhook"
+        "source": "apiai-weather-webhook"
     }
 
 if __name__ == '__main__':
