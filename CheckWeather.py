@@ -20,6 +20,7 @@ def webhook():
 
     res = processRequest(req)
     res = json.dumps(res, indent=4)
+    print(res)
     r = make_response(res)
     r.headers['Content-Type'] = 'application/json'
     return r
@@ -34,7 +35,7 @@ def makeResponse(req):
     date = parameters.get("date")
     if city is None:
         return None 
-    r = requests.get('https://api.openweathermap.org/data/2.5/forecast?q='+ city +'&appid=53c1f84150d78c282b57aae211c7691b')
+    r = requests.get('http://api.openweathermap.org/data/2.5/forecast?q='+ city +'&appid=53c1f84150d78c282b57aae211c7691b')
     json_object = r.json()
     weather = json_object['list']
     for i in len(weather):
