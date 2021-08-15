@@ -5,14 +5,14 @@ import requests
 from flask import Flask
 from flask import request
 from flask import make_response
-from flask_cors import CORS, cross_origin
+#from flask_cors import CORS, cross_origin
 
 # Flask app should start in global layout
 app = Flask (__name__)
-cors = CORS(app)
+#cors = CORS(app)
 
 @app.route('/webhook',methods=['POST'])
-@cross_origin()
+#@cross_origin()
 
 def webhook():
     req = request.get_json(silent=True, force=True)
