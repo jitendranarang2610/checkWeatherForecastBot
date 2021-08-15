@@ -7,9 +7,10 @@ app = Flask(__name__)
 def webhook():
     API_KEY = '53c1f84150d78c282b57aae211c7691b'  # initialize your key here
     city = request.args.get('q')  # city name passed as argument
-
+    print("City value received is %d" %city)
     # call API and convert response into Python dictionary
     url = f'http://api.openweathermap.org/data/2.5/weather?q={city}&APPID={API_KEY}'
+    print("Url formed is %d" %url)
     response = requests.get(url).json()
 
     # error like unknown city name, inavalid api key
@@ -32,4 +33,6 @@ def index():
 
 
 if __name__ == '__main__':
+    print("Main method pre-entry")
     app.run(debug=True)
+    print("Main method entered")
