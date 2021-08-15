@@ -3,8 +3,7 @@ from flask import Flask, request
 
 app = Flask(__name__)
 
-
-@app.route('/city')
+@app.route('/webhook',methods=['POST'])
 def webhook():
     API_KEY = '53c1f84150d78c282b57aae211c7691b'  # initialize your key here
     city = request.args.get('q')  # city name passed as argument
