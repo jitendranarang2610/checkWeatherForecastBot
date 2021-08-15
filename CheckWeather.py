@@ -1,39 +1,61 @@
-import requests
-from flask import Flask, request
+from flask import Flask,request,make_response
+import os,json
+import pyowm
+import os
 
 app = Flask(__name__)
+owmapikey='53c1f84150d78c282b57aae211c7691b'
+owm = pyowm.OWM(owmapikey)
 
-@app.route('/webhook',methods=['POST'])
+#geting and sending response to dialogflow
+@app.route('/webhook', methods=['POST'])
 def webhook():
-    API_KEY = '53c1f84150d78c282b57aae211c7691b'  # initialize your key here
-    city = request.args.get('q')  # city name passed as argument
-    print("City value received is %d" %city)
-    # call API and convert response into Python dictionary
-    url = f'http://api.openweathermap.org/data/2.5/weather?q={city}&APPID={API_KEY}'
-    print("Url formed is %d" %url)
-    response = requests.get(url).json()
+    req = request.get_json(silent=True, force=True)
 
-    # error like unknown city name, inavalid api key
-    if response.get('cod') != 200:
-        message = response.get('message', '')
-        return f'Error getting temperature for {city.title()}. Error message = {message}'
+    print("Request:")
+    print(json.dumps(req, indent=4))
+    
+    res = processRequest(req)
 
-    # get current temperature and convert it into Celsius
-    current_temperature = response.get('main', {}).get('temp')
-    if current_temperature:
-        current_temperature_celsius = round(current_temperature - 273.15, 2)
-        return f'Current temperature of {city.title()} is {current_temperature_celsius} &#8451;'
-    else:
-        return f'Error getting temperature for {city.title()}'
+    res = json.dumps(res, indent=4)
+    print(res)
+    r = make_response(res)
+    r.headers['Content-Type'] = 'application/json'
+    return r
 
-
-@app.route('/')
-def index():
-    return '<h1>Welcome to weather app</h1>'
-
-
+#processing the request from dialogflow
+def processRequest(req):
+    
+    result = req.get("result")
+    parameters = result.get("parameters")
+    city = parameters.get("geo-city")
+    observation = owm.weather_at_place(city)
+    w = observation.get_weather()
+    latlon_res = observation.get_location()
+    lat=str(latlon_res.get_lat())
+    lon=str(latlon_res.get_lon())
+     
+    wind_res=w.get_wind()
+    wind_speed=str(wind_res.get('speed'))
+    
+    humidity=str(w.get_humidity())
+    
+    celsius_result=w.get_temperature('celsius')
+    temp_min_celsius=str(celsius_result.get('temp_min'))
+    temp_max_celsius=str(celsius_result.get('temp_max'))
+    
+    fahrenheit_result=w.get_temperature('fahrenheit')
+    temp_min_fahrenheit=str(fahrenheit_result.get('temp_min'))
+    temp_max_fahrenheit=str(fahrenheit_result.get('temp_max'))
+    speech = "Today the weather in " + city + ": \n" + "Temperature in Celsius:\nMax temp :"+temp_max_celsius+".\nMin Temp :"+temp_min_celsius+".\nTemperature in Fahrenheit:\nMax temp :"+temp_max_fahrenheit+".\nMin Temp :"+temp_min_fahrenheit+".\nHumidity :"+humidity+".\nWind Speed :"+wind_speed+"\nLatitude :"+lat+".\n  Longitude :"+lon
+    
+    return {
+        "speech": speech,
+        "displayText": speech,
+        "source": "dialogflow-weather-by-satheshrgs"
+        }
+    
 if __name__ == '__main__':
-    print("Main method pre-entry")
-    port = int(os.getenv('PORT',5000))
-    print("Starting app on port %d" %port)
-    app.run(debug=True, port=port, host='0.0.0.0')
+    port = int(os.getenv('PORT', 5000))
+    print("Starting app on port %d" % port)
+    app.run(debug=False, port=port, host='0.0.0.0')
