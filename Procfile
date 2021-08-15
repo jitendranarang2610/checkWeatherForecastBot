@@ -1,1 +1,1 @@
-worker: python CheckWeather.py
+web: python CheckWeather.py

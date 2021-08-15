@@ -33,6 +33,6 @@ def index():
 
 
 if __name__ == '__main__':
-    print("Main method pre-entry")
-    app.run(debug=True)
-    print("Main method entered")
+    port = int(os.getenv('PORT',5000))
+    print("Starting app on port %d" %port)
+    app.run(debug=True, port=port, host='0.0.0.0')
