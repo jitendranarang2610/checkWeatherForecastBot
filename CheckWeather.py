@@ -1,28 +1,36 @@
-import configparser
 import requests
-import sys
- 
-def get_api_key():
-    config = configparser.ConfigParser()
-    config.read('config.ini')
-    return config['openweathermap']['api']
- 
-def get_weather(api_key, location):
-    url = "https://api.openweathermap.org/data/2.5/weather?q={}&units=metric&appid={}".format(location, api_key)
-    r = requests.get(url)
-    return r.json()
- 
-def main():
-    if len(sys.argv) != 2:
-        exit("Usage: {} LOCATION".format(sys.argv[0]))
-    location = sys.argv[1]
- 
-    api_key = get_api_key()
-    weather = get_weather(api_key, location)
- 
-    print(weather['main']['temp'])
-    print(weather)
- 
- 
+from flask import Flask, request
+
+app = Flask(__name__)
+
+
+@app.route('/city')
+def webhook():
+    API_KEY = '53c1f84150d78c282b57aae211c7691b'  # initialize your key here
+    city = request.args.get('q')  # city name passed as argument
+
+    # call API and convert response into Python dictionary
+    url = f'http://api.openweathermap.org/data/2.5/weather?q={city}&APPID={API_KEY}'
+    response = requests.get(url).json()
+
+    # error like unknown city name, inavalid api key
+    if response.get('cod') != 200:
+        message = response.get('message', '')
+        return f'Error getting temperature for {city.title()}. Error message = {message}'
+
+    # get current temperature and convert it into Celsius
+    current_temperature = response.get('main', {}).get('temp')
+    if current_temperature:
+        current_temperature_celsius = round(current_temperature - 273.15, 2)
+        return f'Current temperature of {city.title()} is {current_temperature_celsius} &#8451;'
+    else:
+        return f'Error getting temperature for {city.title()}'
+
+
+@app.route('/')
+def index():
+    return '<h1>Welcome to weather app</h1>'
+
+
 if __name__ == '__main__':
-    main()
+    app.run(debug=True)
